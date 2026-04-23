@@ -1,0 +1,13 @@
+[package]
+name = "simplepgp"
+version = "0.1.0"
+edition = "2021"
+description = "Privacy-focused SimplePGP app for Tails OS"
+license = "Apache-2.0"
+
+[dependencies]
+gtk = { version = "0.9", package = "gtk4" }
+adw = { version = "0.7", package = "libadwaita", features = ["v1_2"] }
+glib = "0.20"
+thiserror = "2"
+zeroize = { version = "1", features = ["derive"] }
