@@ -32,6 +32,28 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 source "$HOME/.cargo/env"
 ```
 
+### Tails: Cargo network stability (optional)
+
+If you are building on Tails and see intermittent fetch errors from `crates.io`, add these exports:
+
+```bash
+cat >> ~/.bashrc << 'EOF'
+export CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse
+export CARGO_HTTP_MULTIPLEXING=false
+export CARGO_HTTP_TIMEOUT=600
+export CARGO_NET_RETRY=20
+EOF
+
+source ~/.bashrc
+```
+
+Then run:
+
+```bash
+cargo fetch -vv
+cargo build --release -vv
+```
+
 ## Build
 
 ```bash
