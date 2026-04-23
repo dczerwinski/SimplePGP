@@ -1,7 +1,6 @@
 use std::rc::Rc;
 
 use adw::prelude::*;
-use gtk::prelude::*;
 
 use crate::ui::dialogs;
 use crate::viewmodels::KeyListViewModel;
@@ -115,7 +114,7 @@ pub fn build_key_list_view(
 
             for key in &state.keys {
                 let row = adw::ActionRow::builder()
-                    .title(&glib::markup_escape_text(&key.display_name()))
+                    .title(&*glib::markup_escape_text(&key.display_name()))
                     .subtitle(&format!(
                         "{} · {} {}bit · {}",
                         key.short_id(),

@@ -1,5 +1,3 @@
-use std::rc::Rc;
-
 use adw::prelude::*;
 
 use crate::ui::{decrypt_view, encrypt_view, key_list_view};

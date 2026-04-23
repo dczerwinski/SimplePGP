@@ -1,4 +1,5 @@
 use gtk::gdk;
+use gtk::gdk::prelude::DisplayExt;
 
 /// Copies text to the system clipboard via GDK.
 pub fn copy_to_clipboard(text: &str) {

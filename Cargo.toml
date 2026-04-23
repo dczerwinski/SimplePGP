@@ -7,7 +7,8 @@ license = "Apache-2.0"
 
 [dependencies]
 gtk = { version = "0.9", package = "gtk4" }
-adw = { version = "0.7", package = "libadwaita", features = ["v1_2"] }
+adw = { version = "0.7.2", package = "libadwaita", features = ["v1_4", "v1_5"] }
 glib = "0.20"
+async-channel = "2"
 thiserror = "2"
 zeroize = { version = "1", features = ["derive"] }

@@ -1,7 +1,6 @@
 use std::rc::Rc;
 
 use adw::prelude::*;
-use gtk::prelude::*;
 
 use crate::utils::copy_to_clipboard;
 use crate::viewmodels::CryptoViewModel;
