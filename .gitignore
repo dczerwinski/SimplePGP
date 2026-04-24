@@ -96,6 +96,7 @@ core.*
 *.bak
 *.backup
 *.orig
+!vendor/**/*.orig
 *.rej
 tmp/
 temp/
@@ -167,3 +168,17 @@ book/
 .direnv/
 .envrc
 node_modules/
+
+# ---------------------------------------------------------------
+# Vendored Rust dependencies
+# ---------------------------------------------------------------
+# The `vendor/` directory is produced by `cargo vendor` and must be
+# committed verbatim on the `vendor` branch for offline builds on
+# Tails. Cargo verifies every file listed in each crate's
+# `.cargo-checksum.json`, including test fixtures (*.a, *.lib),
+# upstream originals (Cargo.toml.orig), and source files that happen
+# to match patterns above (e.g. `core.rs`, files under a `core/`
+# directory). These negations override every rule earlier in this
+# file so nothing inside `vendor/` is ever ignored.
+!vendor/
+!vendor/**
