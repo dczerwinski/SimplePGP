@@ -7,26 +7,42 @@ use crate::viewmodels::CryptoViewModel;
 
 /// Builds the "Decrypt" tab content.
 pub fn build_decrypt_view(crypto_vm: &Rc<CryptoViewModel>) -> gtk::Box {
-    let container = gtk::Box::new(gtk::Orientation::Vertical, 0);
+    let container = gtk::Box::builder()
+        .orientation(gtk::Orientation::Vertical)
+        .hexpand(true)
+        .vexpand(true)
+        .build();
 
     let clamp = adw::Clamp::builder()
-        .maximum_size(800)
+        .maximum_size(1400)
+        .tightening_threshold(800)
         .margin_top(12)
         .margin_bottom(12)
         .margin_start(12)
         .margin_end(12)
+        .hexpand(true)
+        .vexpand(true)
         .build();
 
-    let inner = gtk::Box::new(gtk::Orientation::Vertical, 12);
+    let inner = gtk::Box::builder()
+        .orientation(gtk::Orientation::Vertical)
+        .spacing(12)
+        .hexpand(true)
+        .vexpand(true)
+        .build();
 
     // --- ciphertext input ---
     let input_group = adw::PreferencesGroup::builder()
         .title("Encrypted Text")
         .description("Paste the PGP-encrypted message")
+        .vexpand(true)
         .build();
 
     let input_scroll = gtk::ScrolledWindow::builder()
-        .min_content_height(120)
+        .min_content_height(200)
+        .vexpand(true)
+        .hexpand(true)
+        .css_classes(["card"])
         .build();
 
     let input_text = gtk::TextView::builder()
@@ -71,10 +87,14 @@ pub fn build_decrypt_view(crypto_vm: &Rc<CryptoViewModel>) -> gtk::Box {
     // --- output ---
     let output_group = adw::PreferencesGroup::builder()
         .title("Decrypted Output")
+        .vexpand(true)
         .build();
 
     let output_scroll = gtk::ScrolledWindow::builder()
-        .min_content_height(120)
+        .min_content_height(200)
+        .vexpand(true)
+        .hexpand(true)
+        .css_classes(["card"])
         .build();
 
     let output_text = gtk::TextView::builder()

@@ -1,7 +1,5 @@
 use std::thread;
 
-use glib::prelude::*;
-
 /// Spawns a blocking task on a background thread and delivers the result
 /// back on the GLib main loop.
 ///

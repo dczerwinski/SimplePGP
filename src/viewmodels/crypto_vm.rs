@@ -49,6 +49,7 @@ impl CryptoViewModel {
         self.listeners.borrow_mut().push(callback);
     }
 
+    #[allow(dead_code)]
     pub fn state(&self) -> CryptoState {
         self.state.borrow().clone()
     }

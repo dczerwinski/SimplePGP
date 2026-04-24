@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use crate::models::PgpKey;
-use crate::services::GpgService;
+use crate::services::{GpgService, KeyGenParams};
 use crate::utils::spawn_blocking;
 
 pub type KeyListCallback = Box<dyn Fn(&KeyListState)>;
@@ -14,6 +14,8 @@ pub struct KeyListState {
     pub loading: bool,
     pub error: Option<String>,
     pub import_result: Option<Result<String, String>>,
+    pub generate_result: Option<Result<String, String>>,
+    pub delete_result: Option<Result<String, String>>,
 }
 
 impl Default for KeyListState {
@@ -24,11 +26,14 @@ impl Default for KeyListState {
             loading: false,
             error: None,
             import_result: None,
+            generate_result: None,
+            delete_result: None,
         }
     }
 }
 
 impl KeyListState {
+    #[allow(dead_code)]
     pub fn selected_key(&self) -> Option<&PgpKey> {
         self.selected_index.and_then(|i| self.keys.get(i))
     }
@@ -52,6 +57,7 @@ impl KeyListViewModel {
         self.listeners.borrow_mut().push(callback);
     }
 
+    #[allow(dead_code)]
     pub fn state(&self) -> KeyListState {
         self.state.borrow().clone()
     }
@@ -99,6 +105,11 @@ impl KeyListViewModel {
     }
 
     pub fn select_key(&self, index: Option<usize>) {
+        // Avoid a notify→rebuild→row-selected→select_key recursion loop
+        // by short-circuiting when nothing actually changes.
+        if self.state.borrow().selected_index == index {
+            return;
+        }
         self.update(|s| {
             s.selected_index = index;
         });
@@ -133,9 +144,91 @@ impl KeyListViewModel {
         );
     }
 
+    #[allow(dead_code)]
     pub fn clear_import_result(&self) {
         self.update(|s| {
             s.import_result = None;
         });
+    }
+
+    pub fn generate_key(self: &Rc<Self>, params: KeyGenParams) {
+        self.update(|s| {
+            s.loading = true;
+            s.generate_result = None;
+            s.error = None;
+        });
+
+        let vm = Rc::clone(self);
+        spawn_blocking(
+            move || {
+                let svc = GpgService::new();
+                svc.generate_key(&params)
+            },
+            move |result| {
+                let gen_res = match &result {
+                    Ok(msg) => Ok(msg.clone()),
+                    Err(e) => Err(e.to_string()),
+                };
+                vm.update(|s| {
+                    s.loading = false;
+                    s.generate_result = Some(gen_res);
+                });
+                if result.is_ok() {
+                    vm.load_keys();
+                }
+            },
+        );
+    }
+
+    #[allow(dead_code)]
+    pub fn clear_generate_result(&self) {
+        self.update(|s| {
+            s.generate_result = None;
+        });
+    }
+
+    pub fn delete_key(self: &Rc<Self>, fingerprint: String, has_secret: bool) {
+        self.update(|s| {
+            s.loading = true;
+            s.delete_result = None;
+            s.error = None;
+        });
+
+        let vm = Rc::clone(self);
+        let fp_for_msg = fingerprint.clone();
+        spawn_blocking(
+            move || {
+                let svc = GpgService::new();
+                svc.delete_key(&fingerprint, has_secret)
+            },
+            move |result| {
+                let del_res = match &result {
+                    Ok(()) => Ok(format!("Key {} deleted.", short_fp(&fp_for_msg))),
+                    Err(e) => Err(e.to_string()),
+                };
+                vm.update(|s| {
+                    s.loading = false;
+                    s.delete_result = Some(del_res);
+                });
+                if result.is_ok() {
+                    vm.load_keys();
+                }
+            },
+        );
+    }
+
+    #[allow(dead_code)]
+    pub fn clear_delete_result(&self) {
+        self.update(|s| {
+            s.delete_result = None;
+        });
+    }
+}
+
+fn short_fp(fp: &str) -> String {
+    if fp.len() >= 8 {
+        fp[fp.len() - 8..].to_string()
+    } else {
+        fp.to_string()
     }
 }

@@ -13,6 +13,7 @@ impl SecureString {
         Self { inner: value }
     }
 
+    #[allow(dead_code)]
     pub fn as_str(&self) -> &str {
         &self.inner
     }
@@ -22,6 +23,7 @@ impl SecureString {
         out
     }
 
+    #[allow(dead_code)]
     pub fn is_empty(&self) -> bool {
         self.inner.is_empty()
     }
@@ -47,6 +49,7 @@ impl std::fmt::Display for SecureString {
 }
 
 /// Zeroize a Vec<u8> buffer in-place
+#[allow(dead_code)]
 pub fn clear_bytes(buf: &mut Vec<u8>) {
     buf.zeroize();
 }

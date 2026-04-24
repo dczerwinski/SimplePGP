@@ -30,6 +30,7 @@ impl PgpKey {
         }
     }
 
+    #[allow(dead_code)]
     pub fn summary(&self) -> String {
         let secret_marker = if self.has_secret { " [secret]" } else { "" };
         format!(

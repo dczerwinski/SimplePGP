@@ -1,3 +1,4 @@
+pub mod about;
 pub mod decrypt_view;
 pub mod dialogs;
 pub mod encrypt_view;

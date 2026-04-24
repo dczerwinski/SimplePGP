@@ -32,9 +32,32 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 source "$HOME/.cargo/env"
 ```
 
-### Tails: Cargo network stability (optional)
+## GitHub Branches
 
-If you are building on Tails and see intermittent fetch errors from `crates.io`, add these exports:
+The repository has two branches:
+
+- **`main`** — the regular source tree. Building from this branch will pull all Rust dependencies from `crates.io` during the first build.
+- **`vendor`** — identical to `main` but with the full `vendor/` directory and a matching `.cargo/config.toml` committed. Cargo will then build fully offline, without contacting `crates.io` at all.
+
+The `vendor` branch exists specifically for **Tails OS** users. On Tails, all network traffic goes through Tor, and `cargo fetch` against `crates.io` is often unreliable (timeouts, partial downloads, index churn). Using the `vendor` branch sidesteps the problem entirely — you clone once and build without any further network access.
+
+```bash
+# Tails / offline-friendly build
+git clone --branch vendor https://github.com/dczerwinski/SimplePGP.git
+cd SimplePGP
+cargo build --release --offline
+```
+
+```bash
+# Regular build (main branch)
+git clone https://github.com/dczerwinski/SimplePGP.git
+cd SimplePGP
+cargo build --release
+```
+
+### Tails: Cargo network stability (only if building from `main`)
+
+If for some reason you are building from `main` on Tails and see intermittent fetch errors from `crates.io`, the following exports help the Cargo client survive flaky Tor circuits:
 
 ```bash
 cat >> ~/.bashrc << 'EOF'
@@ -47,12 +70,14 @@ EOF
 source ~/.bashrc
 ```
 
-Then run:
+Then:
 
 ```bash
 cargo fetch -vv
 cargo build --release -vv
 ```
+
+If this keeps failing, switch to the `vendor` branch instead.
 
 ## Build
 
@@ -74,6 +99,28 @@ Or run the binary directly:
 ./target/release/simplepgp
 ```
 
+## Desktop integration (Linux)
+
+To register the application icon and `.desktop` entry so SimplePGP shows up correctly in GNOME / the dock / Alt-Tab, use the helper scripts in `scripts/`:
+
+```bash
+# Per-user install (no root required)
+scripts/install-linux.sh
+
+# System-wide install
+sudo scripts/install-linux.sh --system
+```
+
+To remove the installed entries:
+
+```bash
+scripts/uninstall-linux.sh
+# or
+sudo scripts/uninstall-linux.sh --system
+```
+
+The scripts install files from `data/` (`.desktop` file and the hicolor icons) and, if a release binary exists, rewrite `Exec=` to point at `target/release/simplepgp`.
+
 ## Architecture
 
 ```
@@ -92,6 +139,7 @@ src/
 │   ├── key_list_view.rs    # Keys tab
 │   ├── encrypt_view.rs     # Encrypt tab
 │   ├── decrypt_view.rs     # Decrypt tab
+│   ├── about.rs            # About dialog
 │   └── dialogs.rs          # Alert/error dialogs
 ├── security/
 │   ├── memory.rs           # Input validation

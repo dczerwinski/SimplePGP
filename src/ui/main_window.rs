@@ -1,6 +1,8 @@
 use adw::prelude::*;
+use gtk::gio;
 
-use crate::ui::{decrypt_view, encrypt_view, key_list_view};
+use crate::app::APP_ID;
+use crate::ui::{about, decrypt_view, encrypt_view, key_list_view};
 use crate::viewmodels::{CryptoViewModel, KeyListViewModel};
 
 pub fn build_main_window(app: &adw::Application) {
@@ -12,6 +14,7 @@ pub fn build_main_window(app: &adw::Application) {
         .title("SimplePGP")
         .default_width(900)
         .default_height(700)
+        .icon_name(APP_ID)
         .build();
 
     // --- header bar ---
@@ -23,8 +26,30 @@ pub fn build_main_window(app: &adw::Application) {
         .build();
     header.set_title_widget(Some(&title_widget));
 
+    // --- primary menu with About entry ---
+    let menu = gio::Menu::new();
+    menu.append(Some("About SimplePGP"), Some("win.about"));
+
+    let menu_button = gtk::MenuButton::builder()
+        .icon_name("open-menu-symbolic")
+        .menu_model(&menu)
+        .tooltip_text("Main Menu")
+        .build();
+    header.pack_end(&menu_button);
+
+    let about_action = gio::ActionEntry::builder("about")
+        .activate({
+            let win = window.clone();
+            move |_, _, _| about::show_about_dialog(&win)
+        })
+        .build();
+    window.add_action_entries([about_action]);
+
     // --- view stack + switcher ---
-    let stack = adw::ViewStack::new();
+    let stack = adw::ViewStack::builder()
+        .hexpand(true)
+        .vexpand(true)
+        .build();
 
     let keys_page = stack.add_titled(
         &key_list_view::build_key_list_view(&key_vm, &window),

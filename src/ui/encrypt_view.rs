@@ -10,17 +10,29 @@ pub fn build_encrypt_view(
     crypto_vm: &Rc<CryptoViewModel>,
     key_vm: &Rc<KeyListViewModel>,
 ) -> gtk::Box {
-    let container = gtk::Box::new(gtk::Orientation::Vertical, 0);
+    let container = gtk::Box::builder()
+        .orientation(gtk::Orientation::Vertical)
+        .hexpand(true)
+        .vexpand(true)
+        .build();
 
     let clamp = adw::Clamp::builder()
-        .maximum_size(800)
+        .maximum_size(1400)
+        .tightening_threshold(800)
         .margin_top(12)
         .margin_bottom(12)
         .margin_start(12)
         .margin_end(12)
+        .hexpand(true)
+        .vexpand(true)
         .build();
 
-    let inner = gtk::Box::new(gtk::Orientation::Vertical, 12);
+    let inner = gtk::Box::builder()
+        .orientation(gtk::Orientation::Vertical)
+        .spacing(12)
+        .hexpand(true)
+        .vexpand(true)
+        .build();
 
     // --- recipient selector ---
     let recipient_group = adw::PreferencesGroup::builder()
@@ -40,10 +52,14 @@ pub fn build_encrypt_view(
     let input_group = adw::PreferencesGroup::builder()
         .title("Plaintext")
         .description("Enter the text you want to encrypt")
+        .vexpand(true)
         .build();
 
     let input_scroll = gtk::ScrolledWindow::builder()
-        .min_content_height(120)
+        .min_content_height(200)
+        .vexpand(true)
+        .hexpand(true)
+        .css_classes(["card"])
         .build();
 
     let input_text = gtk::TextView::builder()
@@ -87,10 +103,14 @@ pub fn build_encrypt_view(
     // --- output ---
     let output_group = adw::PreferencesGroup::builder()
         .title("Encrypted Output")
+        .vexpand(true)
         .build();
 
     let output_scroll = gtk::ScrolledWindow::builder()
-        .min_content_height(120)
+        .min_content_height(200)
+        .vexpand(true)
+        .hexpand(true)
+        .css_classes(["card"])
         .build();
 
     let output_text = gtk::TextView::builder()
@@ -101,7 +121,6 @@ pub fn build_encrypt_view(
         .bottom_margin(8)
         .left_margin(8)
         .right_margin(8)
-        .css_classes(["dim-label"])
         .build();
     output_scroll.set_child(Some(&output_text));
     output_group.add(&output_scroll);

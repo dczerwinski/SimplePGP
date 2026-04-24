@@ -4,6 +4,9 @@ version = "0.1.0"
 edition = "2021"
 description = "Privacy-focused SimplePGP app for Tails OS"
 license = "Apache-2.0"
+authors = ["Dominik Czerwiński"]
+repository = "https://github.com/dczerwinski/SimplePGP"
+build = "build.rs"
 
 [dependencies]
 gtk = { version = "0.9", package = "gtk4" }
@@ -12,3 +15,6 @@ glib = "0.20"
 async-channel = "2"
 thiserror = "2"
 zeroize = { version = "1", features = ["derive"] }
+
+[target.'cfg(windows)'.build-dependencies]
+winresource = "0.1"

@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=SimplePGP
+GenericName=PGP Key Manager
+Comment=Privacy-focused PGP key management and message encryption
+Exec=simplepgp
+Icon=org.tailsos.simplepgp
+Terminal=false
+Categories=Utility;Security;GTK;
+Keywords=PGP;GPG;Encryption;Privacy;Keys;
+StartupNotify=true
+StartupWMClass=org.tailsos.simplepgp

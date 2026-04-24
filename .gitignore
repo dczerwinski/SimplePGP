@@ -1,0 +1,169 @@
+# ---------------------------------------------------------------
+# Rust / Cargo
+# ---------------------------------------------------------------
+/target/
+**/target/
+**/*.rs.bk
+*.pdb
+
+# Cargo lock file — keep for binaries, ignore for libraries.
+# SimplePGP is a binary application, so Cargo.lock IS committed.
+# (Uncomment the line below if this project becomes a library.)
+# Cargo.lock
+
+# ---------------------------------------------------------------
+# Build artifacts
+# ---------------------------------------------------------------
+*.exe
+*.dll
+*.so
+*.dylib
+*.o
+*.obj
+*.a
+*.lib
+*.rlib
+*.rmeta
+
+# Windows resource compilation artifacts (winresource / build.rs)
+*.res
+
+# ---------------------------------------------------------------
+# IDE / Editors
+# ---------------------------------------------------------------
+.vscode/
+.idea/
+*.iml
+*.swp
+*.swo
+*.swn
+*~
+.project
+.classpath
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# JetBrains RustRover / CLion
+.idea_modules/
+cmake-build-*/
+
+# Cursor AI
+.cursor/
+.cursorignore
+
+# ---------------------------------------------------------------
+# OS generated files
+# ---------------------------------------------------------------
+# Windows
+Thumbs.db
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.Spotlight-V100
+.Trashes
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ---------------------------------------------------------------
+# Logs and debug files
+# ---------------------------------------------------------------
+*.log
+logs/
+*.stackdump
+core
+core.*
+
+# ---------------------------------------------------------------
+# Temporary files
+# ---------------------------------------------------------------
+*.tmp
+*.temp
+*.bak
+*.backup
+*.orig
+*.rej
+tmp/
+temp/
+
+# ---------------------------------------------------------------
+# Environment / secrets
+# ---------------------------------------------------------------
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+
+# ---------------------------------------------------------------
+# GPG / PGP test artifacts (NEVER commit real keys!)
+# ---------------------------------------------------------------
+*.gpg
+*.asc
+*.sig
+*.pgp
+.gnupg/
+test-keys/
+keyring/
+*.kbx
+*.kbx~
+trustdb.gpg
+random_seed
+
+# ---------------------------------------------------------------
+# Packaging / distribution
+# ---------------------------------------------------------------
+dist/
+release/
+pkg/
+*.deb
+*.rpm
+*.AppImage
+*.flatpak
+*.msi
+*.zip
+*.tar
+*.tar.gz
+*.tar.xz
+*.tar.bz2
+*.7z
+
+# ---------------------------------------------------------------
+# Coverage / profiling
+# ---------------------------------------------------------------
+*.profraw
+*.profdata
+tarpaulin-report.html
+cobertura.xml
+lcov.info
+coverage/
+
+# ---------------------------------------------------------------
+# Documentation build output
+# ---------------------------------------------------------------
+/doc/
+book/
+
+# ---------------------------------------------------------------
+# Misc
+# ---------------------------------------------------------------
+.direnv/
+.envrc
+node_modules/

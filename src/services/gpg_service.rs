@@ -2,7 +2,29 @@ use std::collections::HashMap;
 use std::process::Command;
 
 use crate::models::{PgpKey, TrustLevel};
-use crate::security::{validate_key_id, SecureString};
+use crate::security::{validate_key_id, validate_keygen_field, SecureString};
+
+/// Parameters for unattended key generation.
+#[derive(Debug, Clone)]
+pub struct KeyGenParams {
+    pub name: String,
+    pub email: String,
+    pub comment: String,
+    /// Key algorithm, e.g. "RSA" or "EDDSA".
+    pub algorithm: KeyAlgorithm,
+    /// Key length in bits (ignored for EdDSA-based profiles).
+    pub key_length: u32,
+    /// Expiration in GPG format ("0" = never, "1y", "2y", "6m", ...).
+    pub expire: String,
+    /// Optional passphrase. Empty means `%no-protection`.
+    pub passphrase: String,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum KeyAlgorithm {
+    Rsa,
+    Ed25519,
+}
 
 #[derive(Debug, thiserror::Error)]
 pub enum GpgError {
@@ -10,6 +32,7 @@ pub enum GpgError {
     Execution(#[from] std::io::Error),
     #[error("GPG returned error (exit {code}): {stderr}")]
     CommandFailed { code: i32, stderr: String },
+    #[allow(dead_code)]
     #[error("Failed to parse GPG output: {0}")]
     ParseError(String),
     #[error("Input validation failed: {0}")]
@@ -93,6 +116,151 @@ impl GpgService {
         }
 
         Ok(keys)
+    }
+
+    /// Generates a new PGP key pair using an unattended batch script.
+    /// Returns the GPG stderr output (usually contains the new key's
+    /// fingerprint / identifier info).
+    pub fn generate_key(&self, params: &KeyGenParams) -> Result<String, GpgError> {
+        validate_keygen_field(&params.name)?;
+        validate_keygen_field(&params.email)?;
+        validate_keygen_field(&params.comment)?;
+        validate_keygen_field(&params.expire)?;
+        validate_keygen_field(&params.passphrase)?;
+
+        if params.name.trim().is_empty() {
+            return Err(GpgError::Validation(
+                crate::security::InputValidationError::EmptyField,
+            ));
+        }
+
+        let script = Self::build_keygen_script(params);
+
+        let mut cmd = Command::new("gpg");
+        cmd.args([
+            "--batch",
+            "--no-tty",
+            "--pinentry-mode",
+            "loopback",
+            "--gen-key",
+        ]);
+        if !params.passphrase.is_empty() {
+            cmd.args(["--passphrase", &params.passphrase]);
+        }
+
+        let mut child = cmd
+            .stdin(std::process::Stdio::piped())
+            .stdout(std::process::Stdio::piped())
+            .stderr(std::process::Stdio::piped())
+            .spawn()?;
+
+        if let Some(mut stdin) = child.stdin.take() {
+            use std::io::Write;
+            stdin.write_all(script.as_bytes())?;
+        }
+
+        let output = child.wait_with_output()?;
+        let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+
+        if !output.status.success() {
+            return Err(GpgError::CommandFailed {
+                code: output.status.code().unwrap_or(-1),
+                stderr,
+            });
+        }
+
+        Ok(stderr)
+    }
+
+    /// Deletes a key from the keyring by fingerprint.
+    /// If the key has a secret component, the secret is deleted first.
+    pub fn delete_key(&self, fingerprint: &str, has_secret: bool) -> Result<(), GpgError> {
+        validate_key_id(fingerprint)?;
+
+        if has_secret {
+            let output = Command::new("gpg")
+                .args([
+                    "--batch",
+                    "--yes",
+                    "--no-tty",
+                    "--pinentry-mode",
+                    "loopback",
+                    "--delete-secret-keys",
+                    fingerprint,
+                ])
+                .output()?;
+
+            if !output.status.success() {
+                let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+                return Err(GpgError::CommandFailed {
+                    code: output.status.code().unwrap_or(-1),
+                    stderr,
+                });
+            }
+        }
+
+        let output = Command::new("gpg")
+            .args([
+                "--batch",
+                "--yes",
+                "--no-tty",
+                "--delete-keys",
+                fingerprint,
+            ])
+            .output()?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+            return Err(GpgError::CommandFailed {
+                code: output.status.code().unwrap_or(-1),
+                stderr,
+            });
+        }
+
+        Ok(())
+    }
+
+    fn build_keygen_script(params: &KeyGenParams) -> String {
+        let mut script = String::new();
+        script.push_str("%echo Generating a new PGP key\n");
+
+        match params.algorithm {
+            KeyAlgorithm::Rsa => {
+                script.push_str("Key-Type: RSA\n");
+                script.push_str(&format!("Key-Length: {}\n", params.key_length));
+                script.push_str("Key-Usage: sign,cert\n");
+                script.push_str("Subkey-Type: RSA\n");
+                script.push_str(&format!("Subkey-Length: {}\n", params.key_length));
+                script.push_str("Subkey-Usage: encrypt\n");
+            }
+            KeyAlgorithm::Ed25519 => {
+                script.push_str("Key-Type: EDDSA\n");
+                script.push_str("Key-Curve: ed25519\n");
+                script.push_str("Key-Usage: sign,cert\n");
+                script.push_str("Subkey-Type: ECDH\n");
+                script.push_str("Subkey-Curve: cv25519\n");
+                script.push_str("Subkey-Usage: encrypt\n");
+            }
+        }
+
+        script.push_str(&format!("Name-Real: {}\n", params.name.trim()));
+        if !params.comment.trim().is_empty() {
+            script.push_str(&format!("Name-Comment: {}\n", params.comment.trim()));
+        }
+        if !params.email.trim().is_empty() {
+            script.push_str(&format!("Name-Email: {}\n", params.email.trim()));
+        }
+        script.push_str(&format!("Expire-Date: {}\n", params.expire));
+
+        if params.passphrase.is_empty() {
+            script.push_str("%no-protection\n");
+        } else {
+            script.push_str(&format!("Passphrase: {}\n", params.passphrase));
+        }
+
+        script.push_str("%commit\n");
+        script.push_str("%echo done\n");
+        script
     }
 
     /// Imports an ASCII-armored key block.
