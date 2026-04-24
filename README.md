@@ -121,6 +121,29 @@ sudo scripts/uninstall-linux.sh --system
 
 The scripts install files from `data/` (`.desktop` file and the hicolor icons) and, if a release binary exists, rewrite `Exec=` to point at `target/release/simplepgp`.
 
+### Tails OS (persistent install)
+
+On Tails, `~/.local/share/` is wiped on every reboot, so `install-linux.sh` alone is not enough. Use `install-tails.sh` instead — it writes the `.desktop` file and icons into the Dotfiles area of Persistent Storage (`/live/persistence/TailsData_unlocked/dotfiles/`), so Tails restores them on every boot.
+
+Prerequisites:
+
+- Persistent Storage is unlocked.
+- The **Dotfiles** feature is enabled in *Applications → Tails → Persistent Storage*.
+- The project lives inside `~/Persistent/` (e.g. `~/Persistent/SimplePGP`) and is already built with `cargo build --release`.
+
+```bash
+# Persistent install on Tails (run as the amnesia user; it will sudo internally)
+scripts/install-tails.sh
+
+# Custom binary path (if you built somewhere else inside Persistent)
+scripts/install-tails.sh --binary /home/amnesia/Persistent/SimplePGP/target/release/simplepgp
+
+# Remove the persistent entry
+scripts/install-tails.sh --uninstall
+```
+
+The script also activates the entry in the current session, so SimplePGP appears in Activities / the dock without a reboot.
+
 ## Architecture
 
 ```
